@@ -55,22 +55,42 @@
             text-align: left;
             color: #555;
         }
+        
+        .loading {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .error {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h1>Bulacan State University</h1>
     <h2>Library Users</h2>
+    <div id="loading" class="loading">Loading student data...</div>
     <div id="students" class="grid-container"></div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            fetch("david_alvarez.xml")
-                .then(response => response.text())
-                .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-                .then(data => {
+            fetch("./david_alvarez.xml")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(str => {
+                    const parser = new DOMParser();
+                    const data = parser.parseFromString(str, "text/xml");
                     const students = data.getElementsByTagName("student");
                     const studentContainer = document.getElementById("students");
-    
+                    const loadingElement = document.getElementById("loading");
+                    
+                    loadingElement.style.display = "none";
+                    
                     let output = "";
                     Array.from(students).forEach(student => {
                         const name = student.getElementsByTagName("name")[0].textContent;
@@ -79,10 +99,10 @@
                         const adviser = student.getElementsByTagName("adviser")[0].textContent;
                         const schoolYear = student.getElementsByTagName("school_year")[0].textContent;
                         const photo = student.getElementsByTagName("photo")[0].textContent;
-    
+
                         output += `
                             <div class="student-card">
-                                <img src="${photo}" alt="Student Image">
+                                <img src="${photo}" alt="Photo of ${name}" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
                                 <div class="student-info">
                                     <p><strong>Name:</strong> ${name}</p>
                                     <p><strong>Course:</strong> ${course}</p>
@@ -93,10 +113,15 @@
                             </div>
                         `;
                     });
-    
+
                     studentContainer.innerHTML = output;
                 })
-                .catch(error => console.error("Error loading XML:", error));
+                .catch(error => {
+                    console.error("Error loading XML:", error);
+                    document.getElementById("loading").className = "error";
+                    document.getElementById("loading").textContent = 
+                        "Failed to load student data. Please check console for details.";
+                });
         });
     </script>    
 </body>
