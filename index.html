@@ -64,7 +64,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            fetch("David_Alvarez.xml")
+            fetch("david_alvarez.xml")
                 .then(response => response.text())
                 .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
                 .then(data => {
