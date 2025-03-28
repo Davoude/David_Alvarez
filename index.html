@@ -74,37 +74,67 @@
     <div id="students" class="grid-container"></div>
 
    <script>
-        function loadData() {
-            fetch('david_alvarez.xml')
-                .then(response => response.text())
-                .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-                .then(data => {
-                    const students = data.getElementsByTagName('student');
-                    let output = '';
-                    for (let i = 0; i < students.length; i++) {
-                        const name = students[i].getElementsByTagName('name')[0].textContent;
-                        const course = students[i].getElementsByTagName('course')[0].textContent;
-                        const year_section = students[i].getElementsByTagName('year_section')[0].textContent;
-                        const adviser = students[i].getElementsByTagName('adviser')[0].textContent;
-                        const school_year = students[i].getElementsByTagName('school_year')[0].textContent;
-                        const photo = students[i].getElementsByTagName('photo')[0].textContent;
-                        output += 
-                            <div class="student-card">
-                                <img src="${photo}" alt="Student Image">
-                                <div class="student-info">
-                                    <p><b>Name:</b> ${name}</p>
-                                    <p><b>Course:</b> ${course}</p>
-                                    <p><b>Year Level / Section:</b> ${year_section}</p>
-                                    <p><b>Adviser:</b> ${adviser}</p>
-                                    <p><b>School Year:</b> ${school_year}</p>
-                                </div>
-                            </div>
-                        ;
-                    }
-                    document.getElementById('students').innerHTML = output;
-                })
-                .catch(error => console.error('Error loading XML data:', error));
-        }
+       document.addEventListener("DOMContentLoaded", function() {
+    const filePath = "./david_alvarez.xml";
+    console.log("Attempting to fetch the XML file from:", filePath);
+    
+    fetch(filePath)
+        .then(response => {
+            console.log("Fetch response received:", response);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(str => {
+            console.log("Fetched XML content:", str);
+            const parser = new DOMParser();
+            const data = parser.parseFromString(str, "text/xml");
+    
+            // Check for parser errors in XML
+            const parserError = data.querySelector("parsererror");
+            if (parserError) {
+                console.error("XML parsing error encountered:", parserError.textContent);
+                throw new Error("Invalid XML format detected.");
+            }
+            console.log("XML parsed successfully.");
+            
+            const students = data.getElementsByTagName("student");
+            const studentContainer = document.getElementById("students");
+    
+            let output = "";
+            Array.from(students).forEach(student => {
+                const name = student.getElementsByTagName("name")[0]?.textContent || "Unknown";
+                const course = student.getElementsByTagName("course")[0]?.textContent || "Unknown";
+                const yearSection = student.getElementsByTagName("year_section")[0]?.textContent || "Unknown";
+                const adviser = student.getElementsByTagName("adviser")[0]?.textContent || "Unknown";
+                const schoolYear = student.getElementsByTagName("school_year")[0]?.textContent || "Unknown";
+                const photo = student.getElementsByTagName("photo")[0]?.textContent || "";
+    
+                console.log(`Loaded student: ${name}`);
+    
+                output += `
+                    <div class="student-card">
+                        <img src="${photo}" alt="Student Image">
+                        <div class="student-info">
+                            <p><strong>Name:</strong> ${name}</p>
+                            <p><strong>Course:</strong> ${course}</p>
+                            <p><strong>Year Level / Section:</strong> ${yearSection}</p>
+                            <p><strong>Adviser:</strong> ${adviser}</p>
+                            <p><strong>School Year:</strong> ${schoolYear}</p>
+                        </div>
+                    </div>
+                `;
+            });
+    
+            studentContainer.innerHTML = output || `<p>No student data found.</p>`;
+        })
+        .catch(error => {
+            console.error("Error loading XML:", error);
+            document.getElementById("students").innerHTML = `<p style="color: red;">Failed to load students: ${error.message}</p>`;
+        });
+});
+
     </script>
 </body>
 </html>
